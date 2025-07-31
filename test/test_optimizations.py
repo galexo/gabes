@@ -43,7 +43,11 @@ def run_garbler_and_evaluator_with(args):
     garbler_args, evaluator_args, truth = args
     with Executor() as executor:
         future1 = executor.submit(garbler, garbler_args)
+        print("Garbler started")
         future2 = executor.submit(evaluator, evaluator_args)
+        print("Evaluator started")
+        # Wait for both futures to complete
+        print("Waiting for results...")
         out1, out2 = future1.result(), future2.result()
         assert out1 is truth
         assert out2 is truth

@@ -47,7 +47,7 @@ def garbler_ot(client, m0, m1):
         :param bytes m1: the second bytes object (in this case, a label)
     """
     private_key = rsa.generate_private_key(public_exponent=65537,
-                                           key_size=512,
+                                           key_size=1024,
                                            backend=default_backend())
     d = private_key.private_numbers().d
 
