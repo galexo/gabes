@@ -30,9 +30,11 @@ def evaluator(args):
     else:
         inputs = ask_for_inputs(idents)
     labels = request_labels(sock, idents, inputs)
+    print("Labels received {}...".format(labels))
     circ = request_cleaned_circuit(sock)
-    print("Reconstructing circuit...")
+    print("Circuit received {}...".format(circ.input_wires))
     secret_output = circ.reconstruct(labels)
+    print("Circuit reconstructed...")
     final_output = learn_output(sock, secret_output)
     print("The final output of the circuit is: {}".format(final_output))
     sock.close()

@@ -10,6 +10,7 @@ import gabes.settings as settings
 
 from gabes.utils import xor
 from gabes.label import Label
+from gabes.prg import SeedPRG
 
 
 class Wire(object):
@@ -39,15 +40,16 @@ class Wire(object):
                >>> w.get_label(True) == w.true_label.represents
                True
     """
-    def __init__(self, identifier=None):
+    def __init__(self, identifier=None, PRG=random):
         self.identifier = identifier
         if settings.CLASSICAL:
             self.false_label = Label(False)
             self.true_label = Label(True)
-        else:
-            b = random.choice([True, False])
-            self.false_label = Label(False, pp_bit=b)
-            self.true_label = Label(True, pp_bit=not b)
+        else:   
+            b = PRG.choice([True, False])
+            # print(isinstance(PRG, SeedPRG),"Warning: Using os.urandom() for label generation inside WIRE init. ")
+            self.false_label = Label(False, pp_bit=b, PRG=PRG)
+            self.true_label = Label(True, pp_bit=not b, PRG=PRG)
         if settings.FREE_XOR or settings.HALF_GATES:
             self.true_label.label = xor(self.false_label.label, settings.R)
 

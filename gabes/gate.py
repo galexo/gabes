@@ -16,6 +16,7 @@ from gabes.utils import get_last_bit, xor, adjust_wire_offset
 from gabes.crypto import AESKey, generate_zero_ciphertext
 from cryptography.fernet import Fernet, InvalidToken
 from Crypto.Random.random import shuffle
+from gabes.prg import SeedPRG
 
 
 class Gate(object):
@@ -26,7 +27,7 @@ class Gate(object):
         optimizations will be used to garble and ungarble.
 
         :param str gate_type: type of gate (AND, OR, etc)
-        :param bool create_left: whether to create the left wire \
+        :param bool create_left: whetsher to create the left wire \
         on the gate's initialization
         :param bool create_right: whether to create the right wire \
         on the gate's initialization
@@ -39,17 +40,20 @@ class Gate(object):
         'OR': lambda in1, in2: in1 | in2
     }
 
-    def __init__(self, gate_type, create_left=True, create_right=True):
+    def __init__(self, gate_type, PRG, create_left=True, create_right=True):
+        if not isinstance(PRG, SeedPRG):
+            print("!!!!!!!!!!Warning: Using os.urandom() for label generation. "
+                  "Consider using SeedPRG for reproducibility.")
         self.table = []
         self.gate_type = gate_type
-        self.left_wire = Wire() if create_left else None
-        self.right_wire = Wire() if create_right else None
-        self.output_wire = Wire()
+        self.left_wire = Wire(PRG=PRG) if create_left else None
+        self.right_wire = Wire(PRG=PRG) if create_right else None
+        self.output_wire = Wire(PRG=PRG)
 
     def __str__(self):
         return self.gate_type
 
-    def garble(self):
+    def garble(self, PRG=os.urandom):
         """
             Garbles the gate. Delegates to the correct optimization
             depending on the user's choice.
@@ -229,6 +233,7 @@ class Gate(object):
                 self.point_and_permute_garble()
 
     def half_gates_garble(self):
+        # print("Half-gates garble Getting called")
         """
             In this optimization, the most current one to date, the
             authors propose a method to garble *AND* gates with a table
@@ -264,6 +269,7 @@ class Gate(object):
             self.table = [entry1, entry2]
             self.update_output_wire(xor(C0, C0_), xor(xor(C0, C0_), settings.R))
         else:
+            # print("Using FreeXOR")
             self.free_xor_garble()
 
     def update_output_wire(self, false_label, true_label):
@@ -473,6 +479,7 @@ class Gate(object):
             :return: the correct output label
             :rtype: :class:`Label`
         """
+        print("Ungarbling half gates...")
         if self.gate_type == 'AND':
             s_a, s_b = garblers_label.pp_bit, evaluators_label.pp_bit
             entry1, entry2 = self.table
@@ -481,11 +488,13 @@ class Gate(object):
 
             C_g = xor(gen, entry1) if s_a else gen
             C_e = xor(eva, xor(entry2, garblers_label.label)) if s_b else eva
-
+            # print("C_g: {}, C_e: {}".format(C_g, C_e))
             output_label = Label(0)
+            # print("C_g: {}, C_e: {}".format(C_g, C_e))
             output_label.represents = None
             output_label.label = xor(C_g, C_e)
             output_label.pp_bit = get_last_bit(output_label.label)
+            # print("Output label: {}".format(output_label))
             return output_label
         else:
             return self.free_xor_ungarble(garblers_label, evaluators_label)

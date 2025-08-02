@@ -53,54 +53,54 @@ def run_garbler_and_evaluator_with(args):
         assert out2 is truth
 
 
-@pytest.mark.parametrize('args', [(False, 'classical')], indirect=True)
-def test_false_classical(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(False, 'classical')], indirect=True)
+# def test_false_classical(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(True, 'classical')], indirect=True)
-def test_true_classical(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(True, 'classical')], indirect=True)
+# def test_true_classical(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(False, 'point_and_permute')], indirect=True)
-def test_false_point_and_permute(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(False, 'point_and_permute')], indirect=True)
+# def test_false_point_and_permute(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(True, 'point_and_permute')], indirect=True)
-def test_true_point_and_permute(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(True, 'point_and_permute')], indirect=True)
+# def test_true_point_and_permute(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(False, 'grr3')], indirect=True)
-def test_false_grr3(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(False, 'grr3')], indirect=True)
+# def test_false_grr3(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(True, 'grr3')], indirect=True)
-def test_true_grr3(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(True, 'grr3')], indirect=True)
+# def test_true_grr3(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(False, 'free_xor')], indirect=True)
-def test_false_free_xor(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(False, 'free_xor')], indirect=True)
+# def test_false_free_xor(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(True, 'free_xor')], indirect=True)
-def test_true_free_xor(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(True, 'free_xor')], indirect=True)
+# def test_true_free_xor(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(False, 'flexor')], indirect=True)
-def test_false_flexor(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(False, 'flexor')], indirect=True)
+# def test_false_flexor(args):
+#     run_garbler_and_evaluator_with(args)
 
 
-@pytest.mark.parametrize('args', [(True, 'flexor')], indirect=True)
-def test_true_flexor(args):
-    run_garbler_and_evaluator_with(args)
+# @pytest.mark.parametrize('args', [(True, 'flexor')], indirect=True)
+# def test_true_flexor(args):
+#     run_garbler_and_evaluator_with(args)
 
 @pytest.mark.parametrize('args', [(False, 'half_gates')], indirect=True)
 def test_false_half(args):

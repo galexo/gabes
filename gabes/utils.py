@@ -97,8 +97,11 @@ def xor(b1, b2):
 
     """
     n1 = int.from_bytes(b1, byteorder='big')
+    # print("n1: {}".format(n1))
     n2 = int.from_bytes(b2, byteorder='big')
+    # print("n2: {}".format(n2))
     xored = n1 ^ n2
+    # print("xored: {}".format(xored))
     return int.to_bytes(xored, length=settings.NUM_BYTES, byteorder='big')
 
 

@@ -26,7 +26,7 @@ import gabes.network as net
 from gabes.circuit import Circuit
 from gabes.utils import ask_for_inputs
 from gabes.ot import garbler_ot
-
+from gabes.prg import SeedPRG
 
 def garbler(args):
     """
@@ -41,7 +41,9 @@ def garbler(args):
     """
     print("Welcome, garbler. Waiting for the evaluator...")
     sock, client = net.connect_garbler(args.address)
-    circ = Circuit(args.circuit)
+    PRG = SeedPRG(args.seed)
+    circ = Circuit(args.circuit, PRG)
+    
     print("Circuit created...")
     identifiers = hand_over_wire_identifiers(client, circ)
     if args.identifiers:
@@ -69,6 +71,7 @@ def hand_over_wire_identifiers(client, circ):
     identifiers = [wire.identifier for wire in circ.get_input_wires()]
     net.send_data(client, identifiers)
     net.wait_for_ack(client)
+    print("The following identifiers were sent to the evaluator: {}".format(identifiers))
     return identifiers
 
 
@@ -105,6 +108,7 @@ def hand_over_labels(client, circ, garbler_inputs):
     if not set(garbler_inputs.keys()).issubset(set(identifiers)):
         raise ValueError('You have supplied a wire '
                          'identifier not in the circuit.')
+    input_labels = []
     for wire in circ.get_input_wires():
         if wire.identifier in garbler_inputs:
             chosen_bit = garbler_inputs[wire.identifier]
@@ -112,14 +116,21 @@ def hand_over_labels(client, circ, garbler_inputs):
                 secret_label = wire.true_label
             else:
                 secret_label = wire.false_label
+            input_labels.append((wire.identifier, secret_label.to_base64()))
             net.send_data(client, secret_label)
             net.wait_for_ack(client)
         else:
             false_label = copy.deepcopy(wire.false_label)
             true_label = copy.deepcopy(wire.true_label)
-            # Clean before sending
             false_label.represents = true_label.represents = None
+            input_labels.append((wire.identifier + "_0", false_label.to_base64()))
+            input_labels.append((wire.identifier + "_1", true_label.to_base64()))
             garbler_ot(client, false_label, true_label)
+
+    # After sending all labels, write input labels to file
+    with open("input_labels.txt", "a") as f:
+        for identifier, label in input_labels:
+            f.write(f"{identifier}: {label.decode()}\n")
 
 
 def learn_output(client, circ):
@@ -140,4 +151,11 @@ def learn_output(client, circ):
     out2 = output_label.to_base64()
     output = out1 == out2
     net.send_data(client, output)
+    # In the garbler function, after garbling the circuit and before returning:
+    output_wire = circ.tree.name.output_wire
+    with open("output_labels.txt", "a") as f:
+        f.write(f"True label: {output_wire.true_label.to_base64().decode()}\n")
+        f.write(f"False label: {output_wire.false_label.to_base64().decode()}\n")
     return output
+
+

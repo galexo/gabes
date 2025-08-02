@@ -9,7 +9,7 @@ of the bitstring, head to :mod:`gabes.settings`.
 import os
 import base64
 import gabes.settings as settings
-
+from gabes.prg import SeedPRG
 
 class Label(object):
     """
@@ -32,8 +32,22 @@ class Label(object):
             b'eYzEQ5mcHSajUttCznAtxelSPcHYrnF94GOA2GesX5Y='
     """
 
-    def __init__(self, represents, pp_bit=None):
-        self.label = os.urandom(settings.NUM_BYTES)
+    def __init__(self, represents, pp_bit=None, PRG=os.urandom):
+        """
+            Initializes the label with a random 256 bitstring
+            and sets the boolean value it represents.
+
+            :param bool represents: the boolean value this label represents
+            :param bool pp_bit: the point-and-permute bit
+            :param PRG: (optional) a pseudo-random generator to use
+        """
+        self.label = None
+        if isinstance(PRG, SeedPRG):
+            self.label = PRG.randbytes(settings.NUM_BYTES)
+        else:
+            self.label = os.urandom(settings.NUM_BYTES)
+            # print("Warning: Using os.urandom() for label generation. "
+            #       "Consider using SeedPRG for reproducibility.")
         self.represents = represents
         self.pp_bit = pp_bit
 

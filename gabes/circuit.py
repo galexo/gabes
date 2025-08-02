@@ -29,16 +29,17 @@ class Circuit(object):
         :param str file: path of the file describing the circuit
     """
 
-    def __init__(self, file):
+    def __init__(self, file, PRG=os.urandom):
         if settings.FREE_XOR or settings.HALF_GATES:
             while True:
-                settings.R = os.urandom(settings.NUM_BYTES)
+                settings.R = PRG.randbytes(settings.NUM_BYTES)
+                print(type(PRG), "R:", settings.R)
                 if get_last_bit(settings.R):
                     break
-        self.tree = self.build_tree(file)
+        self.tree = self.build_tree(file, PRG=PRG)
         self.input_wires = None
 
-    def build_tree(self, file):
+    def build_tree(self, file, PRG=os.urandom):
         """
             Builds the tree recursively by parsing and breaking up
             the circuit file into smaller expressions until the expression
@@ -52,10 +53,10 @@ class Circuit(object):
         """
         with open(file, 'r') as f:
             expression = f.read().strip()
-            root = self._build_tree(None, expression)
+            root = self._build_tree(None, expression, PRG=PRG)
         return root
 
-    def _build_tree(self, parent, expression):
+    def _build_tree(self, parent, expression, PRG=os.urandom):
         """
             Helper function to build the tree.
 
@@ -65,24 +66,24 @@ class Circuit(object):
 
         """
         left, gate_type, right = self._separate(expression)
-        node = self._build_gate(parent, left, gate_type, right)
+        node = self._build_gate(parent, left, gate_type, right, PRG=PRG)
         gate = node.name
 
         if len(left.split()) == 1:
             gate.left_wire.identifier = left
         else:
-            self._build_tree(node, left)
+            self._build_tree(node, left, PRG=PRG)
         if len(right.split()) == 1:
             gate.right_wire.identifier = right
         else:
-            self._build_tree(node, right)
+            self._build_tree(node, right, PRG=PRG)
 
         gate.garble()
 
         if not parent:
             return node
 
-    def _build_gate(self, parent, left, gate_type, right):
+    def _build_gate(self, parent, left, gate_type, right, PRG=os.urandom):
         """
             Ensures the parent's left wire is the left children's output wire
             and the parent's right wire is the right children's output wire.
@@ -98,7 +99,7 @@ class Circuit(object):
         is_left_leaf = len(left.split()) == 1
         is_right_leaf = len(right.split()) == 1
         gate = Gate(gate_type, create_left=is_left_leaf,
-                    create_right=is_right_leaf)
+                    create_right=is_right_leaf, PRG=PRG)
         if parent:
             node = anytree.Node(gate, parent=parent)
         else:
@@ -151,8 +152,12 @@ class Circuit(object):
             :rtype: :class:`Label`
 
         """
+        print("Reconstructing circuit...")
+        if not labels:
+            raise ValueError("No labels provided for reconstruction.")
         levels = [[node for node in children]
                   for children in anytree.LevelOrderGroupIter(self.tree)][::-1]
+        print("Levels to reconstruct: {}".format(levels))
         for level in levels:
             for node in level:
                 gate = node.name
@@ -166,6 +171,7 @@ class Circuit(object):
                     evaluators_label = right_gate.chosen_label
                 output_label = gate.ungarble(garblers_label, evaluators_label)
                 gate.chosen_label = output_label
+        print("Final output label: {}".format(self.tree.name.chosen_label))
         return self.tree.name.chosen_label
 
     def clean(self):
@@ -206,4 +212,6 @@ class Circuit(object):
             input_wires = [wire for leaf in leaves
                            for wire in [leaf.left_wire, leaf.right_wire]]
             self.input_wires = input_wires
+        # print("The following input wires were found in the circuit: {}".format(
+        #     [wire.identifier for wire in self.input_wires]))
         return self.input_wires
